@@ -90,7 +90,7 @@ class TimetableProvider extends ChangeNotifier {
     if (!_isInitialized) {
       return [];
     }
-    return _classes.where((c) => c.dayOfWeek == dayOfWeek).toList();
+    return _classes.where((c) => c.dayOfWeek == dayOfWeek && c.isActive).toList();
   }
 
   List<Class> getClassesByDay(int dayOfWeek) {

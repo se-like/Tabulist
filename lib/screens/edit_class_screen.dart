@@ -4,6 +4,8 @@ import '../models/class.dart';
 import '../providers/master_data_provider.dart';
 import '../providers/timetable_provider.dart';
 import '../screens/add_class_screen.dart';
+import '../providers/period_master_provider.dart';
+import '../models/period_master.dart';
 
 class EditClassScreen extends StatefulWidget {
   final Class classItem;
@@ -22,10 +24,9 @@ class _EditClassScreenState extends State<EditClassScreen> {
   late String _subjectId;
   late String _teacherId;
   late String _roomId;
-  late int _startTime;
-  late int _endTime;
   late String _memo;
   late int _dayOfWeek;
+  late bool _isActive;
 
   @override
   void initState() {
@@ -33,15 +34,20 @@ class _EditClassScreenState extends State<EditClassScreen> {
     _subjectId = widget.classItem.subjectId;
     _teacherId = widget.classItem.teacherId;
     _roomId = widget.classItem.roomId;
-    _startTime = widget.classItem.startTime;
-    _endTime = widget.classItem.endTime;
     _memo = widget.classItem.memo ?? '';
     _dayOfWeek = widget.classItem.dayOfWeek;
+    _isActive = widget.classItem.isActive;
   }
 
   @override
   Widget build(BuildContext context) {
     final masterDataProvider = context.watch<MasterDataProvider>();
+    final periodMasterProvider = context.watch<PeriodMasterProvider>();
+    final periodMaster = periodMasterProvider.getPeriodMasterByDay(_dayOfWeek);
+    final period = periodMaster?.periods.firstWhere(
+      (p) => p.periodNumber == widget.classItem.periodNumber,
+      orElse: () => null as Period,
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -163,71 +169,6 @@ class _EditClassScreenState extends State<EditClassScreen> {
               },
             ),
             const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: DropdownButtonFormField<int>(
-                    decoration: const InputDecoration(
-                      labelText: '開始時間',
-                      border: OutlineInputBorder(),
-                    ),
-                    value: _startTime,
-                    items: List.generate(24, (index) {
-                      return DropdownMenuItem(
-                        value: index,
-                        child: Text('$index時'),
-                      );
-                    }),
-                    onChanged: (value) {
-                      if (value != null) {
-                        setState(() {
-                          _startTime = value;
-                        });
-                      }
-                    },
-                    validator: (value) {
-                      if (value == null) {
-                        return '開始時間を選択してください';
-                      }
-                      return null;
-                    },
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: DropdownButtonFormField<int>(
-                    decoration: const InputDecoration(
-                      labelText: '終了時間',
-                      border: OutlineInputBorder(),
-                    ),
-                    value: _endTime,
-                    items: List.generate(24, (index) {
-                      return DropdownMenuItem(
-                        value: index,
-                        child: Text('$index時'),
-                      );
-                    }),
-                    onChanged: (value) {
-                      if (value != null) {
-                        setState(() {
-                          _endTime = value;
-                        });
-                      }
-                    },
-                    validator: (value) {
-                      if (value == null) {
-                        return '終了時間を選択してください';
-                      }
-                      if (value <= _startTime) {
-                        return '終了時間は開始時間より後を選択してください';
-                      }
-                      return null;
-                    },
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
             TextFormField(
               decoration: const InputDecoration(
                 labelText: 'メモ',
@@ -239,6 +180,16 @@ class _EditClassScreenState extends State<EditClassScreen> {
                 if (value != null) {
                   _memo = value;
                 }
+              },
+            ),
+            const SizedBox(height: 16),
+            SwitchListTile(
+              title: const Text('この授業を使用する'),
+              value: _isActive,
+              onChanged: (value) {
+                setState(() {
+                  _isActive = value;
+                });
               },
             ),
             const SizedBox(height: 24),
@@ -257,17 +208,27 @@ class _EditClassScreenState extends State<EditClassScreen> {
       _formKey.currentState!.save();
 
       final timetableProvider = context.read<TimetableProvider>();
+      final periodMasterProvider = context.read<PeriodMasterProvider>();
+      final periodMaster = periodMasterProvider.getPeriodMasterByDay(_dayOfWeek);
+      final period = periodMaster?.periods.firstWhere(
+        (p) => p.periodNumber == widget.classItem.periodNumber,
+        orElse: () => null as Period,
+      );
+
       await timetableProvider.updateClass(
         Class(
           id: widget.classItem.id,
           subjectId: _subjectId,
           teacherId: _teacherId,
           roomId: _roomId,
-          startTime: _startTime,
-          endTime: _endTime,
+          startTime: periodMaster?.startTime.hour ?? widget.classItem.startTime,
+          endTime: periodMaster != null && period != null
+              ? periodMaster.startTime.hour + (period.duration ~/ 60)
+              : widget.classItem.endTime,
           dayOfWeek: _dayOfWeek,
           memo: _memo,
           periodNumber: widget.classItem.periodNumber,
+          isActive: _isActive,
         ),
       );
 

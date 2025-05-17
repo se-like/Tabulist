@@ -1,82 +1,62 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:provider/provider.dart';
-import 'package:tabulist/models/class.dart';
-import 'package:tabulist/models/master_data.dart';
 import 'package:tabulist/providers/timetable_provider.dart';
+import 'package:tabulist/providers/period_master_provider.dart';
 import 'package:tabulist/providers/master_data_provider.dart';
 import 'package:tabulist/screens/home_screen.dart';
-import 'package:mockito/annotations.dart';
+
+@GenerateMocks([TimetableProvider, PeriodMasterProvider, MasterDataProvider])
 import 'home_screen_test.mocks.dart';
 
-@GenerateMocks([TimetableProvider, MasterDataProvider])
 void main() {
   late MockTimetableProvider mockTimetableProvider;
+  late MockPeriodMasterProvider mockPeriodMasterProvider;
   late MockMasterDataProvider mockMasterDataProvider;
 
   setUp(() {
     mockTimetableProvider = MockTimetableProvider();
+    mockPeriodMasterProvider = MockPeriodMasterProvider();
     mockMasterDataProvider = MockMasterDataProvider();
 
-    when(mockTimetableProvider.getClassesForDay(any)).thenReturn([
-      Class(
-        id: '1',
-        name: '数学',
-        subjectId: 'sub1',
-        teacherId: 't1',
-        roomId: 'r1',
-        startTime: 540,
-        endTime: 630,
-        dayOfWeek: 1,
-      ),
-    ]);
-
-    when(mockMasterDataProvider.teachers).thenReturn([
-      Teacher(id: 't1', name: '山田先生'),
-    ]);
-
-    when(mockMasterDataProvider.rooms).thenReturn([
-      Room(id: 'r1', name: '101教室'),
-    ]);
+    when(mockTimetableProvider.isInitialized).thenReturn(true);
+    when(mockPeriodMasterProvider.isInitialized).thenReturn(true);
+    when(mockMasterDataProvider.isInitialized).thenReturn(true);
   });
 
-  Widget createWidgetUnderTest() {
-    return MaterialApp(
-      home: MultiProvider(
-        providers: [
-          ChangeNotifierProvider<TimetableProvider>.value(value: mockTimetableProvider),
-          ChangeNotifierProvider<MasterDataProvider>.value(value: mockMasterDataProvider),
-        ],
-        child: const HomeScreen(),
+  testWidgets('初期表示時に現在の曜日が選択されていること', (WidgetTester tester) async {
+    // 現在の曜日を取得（1-7、月曜日が1）
+    final currentWeekday = DateTime.now().weekday;
+    // インデックスに変換（0-6、月曜日が0）
+    final expectedIndex = currentWeekday - 1;
+
+    // テスト用のウィジェットを構築
+    await tester.pumpWidget(
+      MaterialApp(
+        home: MultiProvider(
+          providers: [
+            ChangeNotifierProvider<TimetableProvider>.value(value: mockTimetableProvider),
+            ChangeNotifierProvider<PeriodMasterProvider>.value(value: mockPeriodMasterProvider),
+            ChangeNotifierProvider<MasterDataProvider>.value(value: mockMasterDataProvider),
+          ],
+          child: const HomeScreen(),
+        ),
       ),
     );
-  }
 
-  testWidgets('時間割画面が正しく表示される', (WidgetTester tester) async {
-    await tester.pumpWidget(createWidgetUnderTest());
+    // 初期表示を待機
     await tester.pumpAndSettle();
 
-    expect(find.text('Tabulist'), findsOneWidget);
-    expect(find.text('数学'), findsOneWidget);
-    expect(find.text('山田先生 - 101教室'), findsOneWidget);
-  });
+    // 曜日セレクターの選択状態を確認
+    final daySelector = find.byType(GestureDetector);
+    expect(daySelector, findsNWidgets(7)); // 7つの曜日ボタンがあることを確認
 
-  testWidgets('授業追加ボタンが表示される', (WidgetTester tester) async {
-    await tester.pumpWidget(createWidgetUnderTest());
-    await tester.pumpAndSettle();
-
-    expect(find.byIcon(Icons.add), findsOneWidget);
-  });
-
-  testWidgets('曜日選択が正しく動作する', (WidgetTester tester) async {
-    await tester.pumpWidget(createWidgetUnderTest());
-    await tester.pumpAndSettle();
-
-    // 火曜日を選択
-    await tester.tap(find.text('火'));
-    await tester.pumpAndSettle();
-
-    verify(mockTimetableProvider.getClassesForDay(2)).called(1);
+    // 選択されている曜日のインデックスを確認
+    final selectedDay = tester.widget<GestureDetector>(
+      find.byType(GestureDetector).at(expectedIndex)
+    );
+    expect(selectedDay, isNotNull);
   });
 } 

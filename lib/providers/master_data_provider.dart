@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/master_data.dart';
+import 'package:uuid/uuid.dart';
 
 class MasterDataProvider with ChangeNotifier {
   List<Subject> _subjects = [];
@@ -22,9 +23,40 @@ class MasterDataProvider with ChangeNotifier {
   }
 
   Future<void> _initialize() async {
-    await loadMasterData();
-    _isInitialized = true;
-    notifyListeners();
+    if (_isInitialized) return;
+
+    try {
+      // 既存のマスターデータを読み込む
+      final jsonString = _prefs?.getString('master_data');
+      if (jsonString != null) {
+        final Map<String, dynamic> data = json.decode(jsonString);
+        _subjects = (data['subjects'] as List)
+            .map((item) => Subject.fromJson(item))
+            .toList();
+        _teachers = (data['teachers'] as List)
+            .map((item) => Teacher.fromJson(item))
+            .toList();
+        _rooms = (data['rooms'] as List)
+            .map((item) => Room.fromJson(item))
+            .toList();
+      }
+
+      // 自クラスが存在しない場合は追加
+      if (!_rooms.any((room) => room.name == '自クラス')) {
+        final ownClass = Room(
+          id: const Uuid().v4(),
+          name: '自クラス',
+        );
+        _rooms.add(ownClass);
+        await _saveMasterData();
+      }
+
+      _isInitialized = true;
+      notifyListeners();
+    } catch (e) {
+      print('マスターデータの初期化中にエラーが発生しました: $e');
+      rethrow;
+    }
   }
 
   Future<void> loadMasterData() async {
@@ -133,5 +165,15 @@ class MasterDataProvider with ChangeNotifier {
     final prefs = _prefs ?? await SharedPreferences.getInstance();
     final jsonStr = jsonEncode(_rooms.map((r) => r.toJson()).toList());
     await prefs.setString('rooms', jsonStr);
+  }
+
+  Future<void> _saveMasterData() async {
+    final prefs = _prefs ?? await SharedPreferences.getInstance();
+    final jsonStr = jsonEncode({
+      'subjects': _subjects.map((s) => s.toJson()).toList(),
+      'teachers': _teachers.map((t) => t.toJson()).toList(),
+      'rooms': _rooms.map((r) => r.toJson()).toList(),
+    });
+    await prefs.setString('master_data', jsonStr);
   }
 } 

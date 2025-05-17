@@ -18,13 +18,20 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _selectedDay = 0;
+  late TimetableProvider _timetableProvider;
+  late PeriodMasterProvider _periodMasterProvider;
+  late MasterDataProvider _masterDataProvider;
+  // 現在の曜日を初期値として設定（1-7、月曜日が1）
+  int _selectedDay = DateTime.now().weekday - 1;
   BannerAd? _bannerAd;
   bool _isAdLoaded = false;
 
   @override
   void initState() {
     super.initState();
+    _timetableProvider = Provider.of<TimetableProvider>(context, listen: false);
+    _periodMasterProvider = Provider.of<PeriodMasterProvider>(context, listen: false);
+    _masterDataProvider = Provider.of<MasterDataProvider>(context, listen: false);
     if (AdsService.isAdsEnabled) {
       _bannerAd = AdsService.createBannerAd()
         ..load().then((_) {
@@ -314,6 +321,12 @@ class _HomeScreenState extends State<HomeScreen> {
     Period period,
     PeriodMaster periodMaster,
   ) {
+    print('ホーム画面: _buildClassSlot開始');
+    print('ホーム画面: classItem.isActive = ${classItem.isActive}');
+    print('ホーム画面: classItem.subjectId = ${classItem.subjectId}');
+    print('ホーム画面: classItem.teacherId = ${classItem.teacherId}');
+    print('ホーム画面: classItem.roomId = ${classItem.roomId}');
+
     final subject = masterDataProvider.subjects.firstWhere(
       (s) => s.id == classItem.subjectId,
       orElse: () => Subject(id: '', name: ''),
@@ -327,6 +340,10 @@ class _HomeScreenState extends State<HomeScreen> {
       orElse: () => Room(id: '', name: ''),
     );
 
+    print('ホーム画面: subject.name = ${subject.name}');
+    print('ホーム画面: teacher.name = ${teacher.name}');
+    print('ホーム画面: room.name = ${room.name}');
+
     return GestureDetector(
       onTap: () {
         Navigator.pushNamed(
@@ -335,15 +352,54 @@ class _HomeScreenState extends State<HomeScreen> {
           arguments: classItem,
         );
       },
-      child: Card(
+      child: Container(
+        height: 80,
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: ListTile(
-          title: Text(subject.name),
-          subtitle: Text('${teacher.name} - ${room.name}'),
-          trailing: Text(
-            '${periodMaster.startTime.hour.toString().padLeft(2, '0')}:00',
-          ),
+        decoration: BoxDecoration(
+          color: classItem.isActive ? Colors.white : Colors.grey.shade600,
+          borderRadius: BorderRadius.circular(8),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.2),
+              spreadRadius: 1,
+              blurRadius: 2,
+              offset: const Offset(0, 1),
+            ),
+          ],
         ),
+        child: classItem.isActive
+            ? ListTile(
+                title: Text(
+                  subject.name,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                subtitle: Text(
+                  '${teacher.name} / ${room.name}',
+                  style: TextStyle(
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+                trailing: Text(
+                  '${period.periodNumber}時限目',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              )
+            : Center(
+                child: Text(
+                  '${period.periodNumber}時限目',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
       ),
     );
   }

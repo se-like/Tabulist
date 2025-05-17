@@ -8,6 +8,7 @@ class Class {
   final int dayOfWeek;
   final String? memo;
   final int periodNumber;
+  final bool isActive;
 
   Class({
     required this.id,
@@ -19,6 +20,7 @@ class Class {
     required this.dayOfWeek,
     this.memo,
     required this.periodNumber,
+    this.isActive = true,
   });
 
   Map<String, dynamic> toJson() {
@@ -32,6 +34,7 @@ class Class {
       'dayOfWeek': dayOfWeek,
       'memo': memo,
       'periodNumber': periodNumber,
+      'isActive': isActive,
     };
   }
 
@@ -45,7 +48,8 @@ class Class {
       endTime: json['endTime'] as int,
       dayOfWeek: json['dayOfWeek'] as int,
       memo: json['memo'] as String?,
-      periodNumber: json['periodNumber'] as int? ?? 1,
+      periodNumber: json['periodNumber'] as int,
+      isActive: json['isActive'] as bool? ?? true,
     );
   }
 }

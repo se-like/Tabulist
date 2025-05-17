@@ -5,16 +5,17 @@ import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-@GenerateMocks([SharedPreferences])
+@GenerateMocks([], customMocks: [MockSpec<SharedPreferences>(as: #MockSharedPreferences)])
 import 'master_data_provider_test.mocks.dart';
 
 void main() {
-  late MockSharedPreferences mockPrefs;
   late MasterDataProvider provider;
+  late MockSharedPreferences mockPrefs;
 
   setUp(() {
     mockPrefs = MockSharedPreferences();
-    provider = MasterDataProvider(prefs: mockPrefs);
+    provider = MasterDataProvider();
+    provider.initialize();
 
     // SharedPreferencesのモック設定
     when(mockPrefs.getStringList(any)).thenReturn([]);
@@ -104,5 +105,21 @@ void main() {
       await provider.deleteRoom('1');
       expect(provider.rooms, isEmpty);
     });
+  });
+
+  test('初期化時に自クラスが教室マスターに登録されていること', () async {
+    // 初期化を実行
+    await provider.initialize();
+
+    // 教室マスターを取得
+    final rooms = provider.rooms;
+
+    // 自クラスが存在することを確認
+    expect(rooms.any((room) => room.name == '自クラス'), isTrue);
+
+    // 自クラスのデータを確認
+    final ownClass = rooms.firstWhere((room) => room.name == '自クラス');
+    expect(ownClass.id, isNotEmpty);
+    expect(ownClass.name, equals('自クラス'));
   });
 } 

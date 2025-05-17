@@ -22,16 +22,18 @@ class AddClassScreen extends StatefulWidget {
 
 class _AddClassScreenState extends State<AddClassScreen> {
   final _formKey = GlobalKey<FormState>();
-  String _subjectId = '';
-  String _teacherId = '';
-  String _roomId = '';
-  String _memo = '';
+  late String _subjectId;
+  late String _teacherId;
+  late String _roomId;
+  late String _memo;
+  late int _dayOfWeek;
+  late bool _isActive;
 
   @override
   void initState() {
     super.initState();
     print('授業登録画面: initState開始');
-    print('授業登録画面: periodNumber = [32m${widget.periodNumber}[0m, dayOfWeek = [32m${widget.dayOfWeek}[0m');
+    print('授業登録画面: periodNumber = ${widget.periodNumber}, dayOfWeek = ${widget.dayOfWeek}');
     // 自クラスを初期値として設定
     final masterDataProvider = context.read<MasterDataProvider>();
     final selfClass = masterDataProvider.rooms.firstWhere(
@@ -39,6 +41,11 @@ class _AddClassScreenState extends State<AddClassScreen> {
       orElse: () => masterDataProvider.rooms.first,
     );
     _roomId = selfClass.id;
+    _subjectId = '';
+    _teacherId = '';
+    _memo = '';
+    _dayOfWeek = widget.dayOfWeek;
+    _isActive = true;
   }
 
   @override
@@ -91,8 +98,8 @@ class _AddClassScreenState extends State<AddClassScreen> {
     print('授業登録画面: period = $period');
     print('授業登録画面: period.isEnabled = ${period.isEnabled}');
 
-    if (!period.isEnabled) {
-      print('授業登録画面: 選択された時限は無効です');
+    if (period == null || !period.isEnabled) {
+      print('授業登録画面: periodがnullまたは無効なため保存を中止');
       return Scaffold(
         appBar: AppBar(
           title: const Text('授業登録'),
@@ -205,6 +212,16 @@ class _AddClassScreenState extends State<AddClassScreen> {
                 }
               },
             ),
+            const SizedBox(height: 16),
+            SwitchListTile(
+              title: const Text('この授業を使用する'),
+              value: _isActive,
+              onChanged: (value) {
+                setState(() {
+                  _isActive = value;
+                });
+              },
+            ),
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: _saveClass,
@@ -249,9 +266,10 @@ class _AddClassScreenState extends State<AddClassScreen> {
           roomId: _roomId,
           startTime: periodMaster.startTime.hour,
           endTime: periodMaster.startTime.hour + (period.duration ~/ 60),
-          dayOfWeek: widget.dayOfWeek,
+          dayOfWeek: _dayOfWeek,
           memo: _memo,
           periodNumber: widget.periodNumber,
+          isActive: _isActive,
         ),
       );
       print('授業登録画面: 授業データの保存が完了');
