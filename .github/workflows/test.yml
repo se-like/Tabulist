@@ -1,0 +1,51 @@
+name: Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.16.0'
+        channel: 'stable'
+
+    - name: Install dependencies
+      run: flutter pub get
+
+    - name: Run tests with coverage
+      run: |
+        flutter test --coverage
+        genhtml coverage/lcov.info -o coverage/html
+
+    - name: Upload coverage report
+      uses: actions/upload-artifact@v3
+      with:
+        name: coverage-report
+        path: coverage/html
+
+    - name: Check coverage threshold
+      run: |
+        # カバレッジのしきい値を設定
+        COVERAGE_THRESHOLD=90
+        
+        # カバレッジの概要を取得
+        COVERAGE_SUMMARY=$(lcov --summary coverage/lcov.info)
+        
+        # 行カバレッジを抽出
+        LINE_COVERAGE=$(echo "$COVERAGE_SUMMARY" | grep "lines......:" | awk '{print $2}' | sed 's/%//')
+        
+        # しきい値と比較
+        if (( $(echo "$LINE_COVERAGE < $COVERAGE_THRESHOLD" | bc -l) )); then
+          echo "テストカバレッジがしきい値（${COVERAGE_THRESHOLD}%）を下回っています: ${LINE_COVERAGE}%"
+          exit 1
+        else
+          echo "テストカバレッジ: ${LINE_COVERAGE}%"
+        fi 

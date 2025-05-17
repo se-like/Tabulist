@@ -1,0 +1,2 @@
+/Users/koji/Work/Tabulist/Tabulist/android/app/.cxx/Debug/156e2c2d/x86_64/CMakeFiles/edit_cache.dir
+/Users/koji/Work/Tabulist/Tabulist/android/app/.cxx/Debug/156e2c2d/x86_64/CMakeFiles/rebuild_cache.dir

@@ -1,0 +1,2 @@
+/Users/koji/Work/Tabulist/Tabulist/android/app/.cxx/RelWithDebInfo/3p6a475n/armeabi-v7a/CMakeFiles/edit_cache.dir
+/Users/koji/Work/Tabulist/Tabulist/android/app/.cxx/RelWithDebInfo/3p6a475n/armeabi-v7a/CMakeFiles/rebuild_cache.dir

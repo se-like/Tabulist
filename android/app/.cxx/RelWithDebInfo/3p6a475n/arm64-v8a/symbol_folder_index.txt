@@ -1,0 +1,1 @@
+/Users/koji/Work/Tabulist/Tabulist/build/app/intermediates/cxx/RelWithDebInfo/3p6a475n/obj/arm64-v8a

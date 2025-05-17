@@ -33,6 +33,20 @@ flutter pub get
 flutter run
 ```
 
+## ビルド
+
+### Android APKのビルド
+```bash
+flutter build apk --release
+```
+ビルドされたAPKは`build/app/outputs/flutter-apk/app-release.apk`に出力されます。
+
+### iOSアプリのビルド
+```bash
+flutter build ios --release
+```
+ビルドされたアプリは`build/ios/iphoneos/Runner.app`に出力されます。
+
 ## 使用しているパッケージ
 
 - provider: ^6.1.1 - 状態管理
@@ -40,6 +54,40 @@ flutter run
 - intl: ^0.19.0 - 国際化
 - flutter_local_notifications: ^16.3.0 - 通知機能
 - table_calendar: ^3.0.9 - カレンダー表示
+
+## テストの実行
+
+### ユニットテスト
+```bash
+flutter test
+```
+
+### 統合テスト
+```bash
+flutter test integration_test
+```
+
+### テストカバレッジレポートの生成
+```bash
+./scripts/generate_coverage.sh
+```
+
+生成されたレポートは`coverage/html/index.html`で確認できます。
+
+## テストカバレッジの基準
+
+- ビジネスロジックのテストカバレッジは90%以上を維持
+- UIコンポーネントは主要なユーザーインタラクションのテストを必ず含める
+- 時間割のCRUD操作は100%カバレッジを目標とする
+
+## CI/CD
+
+GitHub Actionsで以下のチェックが自動実行されます：
+
+1. テストの実行
+2. テストカバレッジレポートの生成
+3. カバレッジしきい値（90%）のチェック
+4. Android APKとiOSアプリのビルド
 
 ## ライセンス
 
