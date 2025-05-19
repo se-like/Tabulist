@@ -57,7 +57,7 @@
 	<key>NSUserNotificationSoundName</key>
 	<string>default</string>
 	<key>GADApplicationIdentifier</key>
-	<string>ca-app-pub-4895158562186219~6897495503</string>
+	<string>ca-app-pub-4895158562186219~4642867250</string>
 	<key>SKAdNetworkItems</key>
 	<array>
 		<dict>
@@ -65,16 +65,16 @@
 			<string>cstr6suwn9.skadnetwork</string>
 		</dict>
 	</array>
-	<!-- TODO: Google AdMobの設定が完了するまで一時的に無効化
-	<key>GADApplicationIdentifier</key>
-	<string>ca-app-pub-3940256099942544~1458002511</string>
-	<key>SKAdNetworkItems</key>
-	<array>
-		<dict>
-			<key>SKAdNetworkIdentifier</key>
-			<string>cstr6suwn9.skadnetwork</string>
-		</dict>
-	</array>
-	-->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+		<key>NSAllowsArbitraryLoadsInWebContent</key>
+		<true/>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
+	<key>GADIsAdManagerApp</key>
+	<true/>
 </dict>
 </plist>

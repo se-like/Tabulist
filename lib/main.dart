@@ -70,15 +70,27 @@ void main() async {
 
     // 広告の初期化
     try {
+      print('アプリ起動: 広告の初期化を開始');
       await MobileAds.instance.initialize();
+      print('MobileAdsの初期化完了');
+      
+      // テストデバイスの設定
+      final testDeviceIds = ['3757D847-0E61-43C2-BDFC-E4F1FB004BB9'];
+      print('テストデバイスIDを設定: $testDeviceIds');
       await MobileAds.instance.updateRequestConfiguration(
         RequestConfiguration(
-          testDeviceIds: ['3757D847-0E61-43C2-BDFC-E4F1FB004BB9'],
+          testDeviceIds: testDeviceIds,
         ),
       );
+      print('広告の設定を更新完了');
+      
+      // AdsServiceの初期化
+      print('AdsServiceの初期化を開始');
       await AdsService.initialize(prefs: prefs);
-    } catch (e) {
+      print('AdsServiceの初期化完了: isAdsEnabled = ${AdsService.isAdsEnabled}');
+    } catch (e, stackTrace) {
       print('広告の初期化中にエラーが発生しました: $e');
+      print('スタックトレース: $stackTrace');
     }
     
     // 課金の初期化
@@ -133,7 +145,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Tabulist',
+        title: 'Tabulist',
       theme: AppTheme.currentTheme,
       home: const MainScreen(),
       routes: {
@@ -373,7 +385,7 @@ class _MainScreenState extends State<MainScreen> {
               decoration: const InputDecoration(
                 labelText: '階',
                 border: OutlineInputBorder(),
-              ),
+        ),
               keyboardType: TextInputType.number,
             ),
             const SizedBox(height: 16),
