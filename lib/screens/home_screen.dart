@@ -9,6 +9,7 @@ import '../services/ads_service.dart';
 import '../providers/period_master_provider.dart';
 import '../models/period_master.dart';
 import '../screens/add_class_screen.dart';
+import '../screens/settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -32,15 +33,22 @@ class _HomeScreenState extends State<HomeScreen> {
     _timetableProvider = Provider.of<TimetableProvider>(context, listen: false);
     _periodMasterProvider = Provider.of<PeriodMasterProvider>(context, listen: false);
     _masterDataProvider = Provider.of<MasterDataProvider>(context, listen: false);
+    _initializeAds();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // 広告の初期化はinitStateで行うため、ここでは何もしない
+  }
+
+  Future<void> _initializeAds() async {
     if (AdsService.isAdsEnabled) {
-      _bannerAd = AdsService.createBannerAd()
-        ..load().then((_) {
-          if (mounted) {
-            setState(() {
-              _isAdLoaded = true;
-            });
-          }
-        });
+      await AdsService.createBannerAd(onLoaded: () {
+        if (mounted) {
+          setState(() {});
+        }
+      });
     }
   }
 
@@ -52,6 +60,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    print('HomeScreen build: isAdsEnabled = ${AdsService.isAdsEnabled}, _isAdLoaded = false');
     return Scaffold(
       appBar: AppBar(
         title: const Text('Tabulist'),
@@ -59,7 +68,7 @@ class _HomeScreenState extends State<HomeScreen> {
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () {
-              Navigator.pushNamed(context, '/period-master');
+              Navigator.pushNamed(context, '/settings');
             },
           ),
           IconButton(
@@ -127,13 +136,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Expanded(
             child: _buildTimetable(),
           ),
-          if (AdsService.isAdsEnabled && _isAdLoaded && _bannerAd != null)
-            Container(
-              width: _bannerAd!.size.width.toDouble(),
-              height: _bannerAd!.size.height.toDouble(),
-              alignment: Alignment.center,
-              child: AdWidget(ad: _bannerAd!),
-            ),
+          _buildAdContainer(),
         ],
       ),
     );
@@ -400,6 +403,22 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ),
+      ),
+    );
+  }
+
+  Widget _buildAdContainer() {
+    if (!AdsService.isAdsEnabled) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      height: 50,
+      color: Colors.white,
+      child: Center(
+        child: AdsService.isAdLoaded
+            ? AdsService.getBannerAdWidget()
+            : const Text('広告を読み込み中...', style: TextStyle(color: Colors.grey)),
       ),
     );
   }
